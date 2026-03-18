@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoTrack Pro — Carbon Footprint Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --bg: #0a0f0d;
+  --surface: #111a15;
+  --surface2: #162019;
+  --surface3: #1c2a20;
+  --border: rgba(74,183,91,0.15);
+  --border2: rgba(74,183,91,0.3);
+  --green: #4ab75b;
+  --green-bright: #5edd72;
+  --green-dim: #2d7a3a;
+  --green-glow: rgba(74,183,91,0.12);
+  --amber: #f0a843;
+  --red: #e05252;
+  --blue: #4a9ef5;
+  --text: #e8f0ea;
+  --text2: #8ba894;
+  --text3: #4d6655;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+::selection { background: var(--green-dim); color: var(--text); }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Background ── */
+.bg-pattern {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(74,183,91,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(74,183,91,0.06) 0%, transparent 60%);
+}
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(74,183,91,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,183,91,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Layout ── */
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── Nav ── */
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 60px;
+  padding: 0 4px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--green-bright);
+  letter-spacing: -0.01em;
+}
+.logo-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity:1; transform: scale(1); }
+  50% { opacity:0.5; transform: scale(0.85); }
+}
+.nav-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid var(--border2);
+  padding: 7px 18px;
+  border-radius: 20px;
+  background: var(--green-glow);
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--green-bright);
+}
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--text2);
+  max-width: 500px;
+  margin: 0 auto 32px;
+  line-height: 1.7;
+}
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  text-align: center;
+}
+.stat-chip .num {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.8rem;
+  color: var(--green-bright);
+  line-height: 1;
+}
+.stat-chip .lbl {
+  font-size: 0.75rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* ── Progress Steps ── */
+.step-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+  padding: 20px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.step-item:hover .step-num { border-color: var(--green); color: var(--green); }
+.step-connector {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  min-width: 16px;
+  max-width: 40px;
+  transition: var(--transition);
+}
+.step-connector.done { background: var(--green-dim); }
+.step-num {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text3);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.step-item.active .step-num {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(74,183,91,0.4);
+}
+.step-item.done .step-num {
+  background: var(--green-dim);
+  border-color: var(--green-dim);
+  color: #fff;
+}
+.step-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text3);
+  white-space: nowrap;
+  transition: var(--transition);
+}
+.step-item.active .step-label { color: var(--green-bright); }
+.step-item.done .step-label { color: var(--text2); }
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+}
+
+/* ── Section ── */
+.form-section { display: none; animation: slideUp 0.4s ease both; }
+.form-section.active { display: block; }
+@keyframes slideUp {
+  from { opacity:0; transform: translateY(16px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.section-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: var(--green-glow);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.section-header h2 {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.section-header p {
+  font-size: 0.88rem;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* ── Field Groups ── */
+.field { margin-bottom: 28px; }
+.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.field-label label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.01em;
+}
+.field-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-glow);
+  border: 1px solid var(--border2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  transition: var(--transition);
+}
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text3);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ── Select & Input ── */
+select, input[type="number"], input[type="text"] {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+}
+select { cursor: pointer; }
+select option { background: #1c2a20; color: var(--text); }
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--green);
+  background: var(--surface3);
+  box-shadow: 0 0 0 3px rgba(74,183,91,0.1);
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234ab75b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+input::placeholder { color: var(--text3); }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+@media(max-width:600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ── Slider ── */
+.slider-wrap { position: relative; padding-bottom: 18px; }
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--surface3);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 10px rgba(74,183,91,0.5);
+  cursor: pointer;
+  transition: var(--transition);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 18px rgba(74,183,91,0.7);
+}
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+/* ── Toggle Cards ── */
+.toggle-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.toggle-card {
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  user-select: none;
+}
+.toggle-card:hover { border-color: var(--green-dim); background: var(--surface3); }
+.toggle-card.selected {
+  border-color: var(--green);
+  background: var(--green-glow);
+  box-shadow: 0 0 0 1px var(--green);
+}
+.toggle-card .tc-icon { font-size: 1.5rem; margin-bottom: 6px; display: block; }
+.toggle-card .tc-label { font-size: 0.82rem; font-weight: 600; color: var(--text2); }
+.toggle-card .tc-sub { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+.toggle-card.selected .tc-label { color: var(--green-bright); }
+
+/* ── Checkbox ── */
+.check-group { display: flex; flex-direction: column; gap: 10px; }
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.check-item:hover { border-color: var(--green-dim); }
+.check-item input[type="checkbox"] { display: none; }
+.check-box {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  font-size: 0.7rem;
+  color: transparent;
+}
+.check-item.checked .check-box {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.check-item.checked { border-color: var(--green-dim); }
+.check-label { font-size: 0.88rem; font-weight: 500; color: var(--text2); }
+.check-sub { font-size: 0.75rem; color: var(--text3); }
+.check-save { margin-left: auto; font-size: 0.75rem; color: var(--green); font-weight: 700; }
+
+/* ── Navigation ── */
+.nav-row {
+  display: flex;
+  gap: 14px;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+  letter-spacing: 0.01em;
+  flex: 1;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+}
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.btn-primary {
+  background: var(--green);
+  color: #0a1a0e;
+}
+.btn-primary:hover {
+  background: var(--green-bright);
+  box-shadow: 0 8px 24px rgba(74,183,91,0.35);
+  transform: translateY(-1px);
+}
+.btn-calc {
+  background: linear-gradient(135deg, var(--green), #2d9e42);
+  color: #fff;
+  font-size: 1rem;
+}
+.btn-calc:hover {
+  background: linear-gradient(135deg, var(--green-bright), var(--green));
+  box-shadow: 0 10px 32px rgba(74,183,91,0.45);
+  transform: translateY(-2px);
+}
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--green-dim);
+  color: var(--green);
+}
+.btn-outline:hover { background: var(--green-glow); border-color: var(--green); }
+.btn-danger {
+  background: rgba(224,82,82,0.12);
+  border: 1.5px solid rgba(224,82,82,0.3);
+  color: var(--red);
+}
+.btn-danger:hover { background: rgba(224,82,82,0.2); }
+
+/* ── RESULTS ── */
+#resultsCard { display: none; }
+
+.result-hero {
+  text-align: center;
+  padding: 48px 32px 40px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,183,91,0.08) 0%, transparent 70%);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 40px;
+  position: relative;
+}
+.result-hero-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+.emission-display {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.emission-big {
+  font-family: var(--serif);
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 1;
+  color: var(--green-bright);
+  letter-spacing: -0.03em;
+}
+.emission-unit-block {
+  padding-bottom: 10px;
+  text-align: left;
+}
+.emission-unit-block .unit { display: block; font-size: 1rem; color: var(--text2); font-weight: 600; }
+.emission-unit-block .sub { display: block; font-size: 0.75rem; color: var(--text3); }
+.result-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-top: 10px;
+}
+.verdict-good { background: rgba(74,183,91,0.15); border: 1px solid var(--green-dim); color: var(--green-bright); }
+.verdict-ok   { background: rgba(240,168,67,0.12); border: 1px solid rgba(240,168,67,0.35); color: var(--amber); }
+.verdict-high { background: rgba(224,82,82,0.12);  border: 1px solid rgba(224,82,82,0.3);  color: var(--red); }
+
+/* ── Score Ring ── */
+.result-scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+@media(max-width:600px) { .result-scores { grid-template-columns: 1fr; } }
+.score-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-align: center;
+}
+.score-card .sc-val {
+  font-family: var(--serif);
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.score-card .sc-label { font-size: 0.78rem; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.score-card .sc-sub { font-size: 0.8rem; color: var(--text2); margin-top: 4px; }
+
+/* ── Breakdown ── */
+.section-title {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.section-title i { color: var(--green); font-size: 1rem; }
+
+.breakdown-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+.bk-item {
+  display: grid;
+  grid-template-columns: 48px 140px 1fr 70px 80px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.bk-item:hover { border-color: var(--border2); transform: translateX(3px); }
+@media(max-width:600px) { .bk-item { grid-template-columns: 40px 1fr; grid-template-rows: auto auto auto; gap: 8px; } }
+.bk-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--green-glow);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green);
+  font-size: 1rem;
+}
+.bk-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.bk-sub  { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.bk-bar-wrap {
+  height: 8px;
+  background: var(--surface3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bk-bar {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+.bk-pct { font-weight: 800; font-size: 0.95rem; text-align: center; color: var(--text); }
+.bk-tons { font-size: 0.82rem; color: var(--text3); text-align: right; font-weight: 600; }
+
+/* ── Recommendations ── */
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.rec-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.rec-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green-dim);
+  transform: scaleX(0);
+  transition: var(--transition);
+  transform-origin: left;
+}
+.rec-card:hover { border-color: var(--green-dim); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+.rec-card:hover::after { transform: scaleX(1); }
+.rec-icon { font-size: 1.8rem; margin-bottom: 14px; }
+.rec-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 8px; }
+.rec-desc { font-size: 0.85rem; color: var(--text2); line-height: 1.6; margin-bottom: 14px; }
+.rec-save { font-size: 0.78rem; font-weight: 700; color: var(--green); background: var(--green-glow); border: 1px solid var(--border2); padding: 5px 12px; border-radius: 20px; display: inline-block; }
+.rec-difficulty {
+  position: absolute;
+  top: 16px; right: 16px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+.diff-easy { background: rgba(74,183,91,0.15); color: var(--green); }
+.diff-med  { background: rgba(240,168,67,0.15); color: var(--amber); }
+.diff-hard { background: rgba(224,82,82,0.12);  color: var(--red); }
+
+/* ── Timeline ── */
+.timeline { position: relative; padding-left: 28px; margin-bottom: 40px; }
+.timeline::before { content:''; position:absolute; left:7px; top:0; bottom:0; width:2px; background: linear-gradient(to bottom, var(--green), var(--green-dim), transparent); }
+.tl-item { position:relative; margin-bottom:30px; }
+.tl-item::before {
+  content:''; position:absolute; left:-24px; top:4px;
+  width:16px; height:16px; border-radius:50%;
+  background: var(--surface);
+  border: 2px solid var(--green-dim);
+  transition: var(--transition);
+}
+.tl-item:hover::before { background: var(--green); border-color: var(--green); box-shadow: 0 0 12px rgba(74,183,91,0.5); }
+.tl-time { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+.tl-title { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.tl-desc { font-size: 0.85rem; color: var(--text2); line-height: 1.5; }
+.tl-save-badge { display: inline-block; margin-top: 8px; padding: 4px 12px; background: var(--green-glow); border: 1px solid var(--border2); border-radius: 20px; font-size: 0.78rem; font-weight: 700; color: var(--green); }
+
+/* ── Comparison ── */
+.comparison-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 40px; }
+.cmp-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition);
+}
+.cmp-card:hover { border-color: var(--border2); }
+.cmp-icon { font-size: 1.5rem; }
+.cmp-val { font-family: var(--serif); font-size: 1.1rem; color: var(--text); }
+.cmp-lbl { font-size: 0.75rem; color: var(--text3); }
+.cmp-diff { margin-left: auto; font-size: 0.78rem; font-weight: 700; }
+.diff-plus { color: var(--red); }
+.diff-minus { color: var(--green); }
+
+/* ── Result Actions ── */
+.result-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.result-actions .btn { flex: 1; min-width: 140px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  padding: 14px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { font-size: 1.1rem; }
+
+/* ── Quick action bar ── */
+.qbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.qbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.qbtn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+.qbtn i { color: var(--green); }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border); margin: 36px 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-dim); }
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding-top: 20px;
+  font-size: 0.78rem;
+  color: var(--text3);
+}
+.footer a { color: var(--green-dim); text-decoration: none; }
+.footer a:hover { color: var(--green); }
+
+/* ── Print ── */
+@media print {
+  body { background: #fff; color: #000; }
+  .bg-pattern, .bg-grid, .qbar, .topnav, .step-track, .nav-row, .result-actions { display: none !important; }
+  .card, .rec-card, .bk-item { border: 1px solid #ddd; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+<div class="bg-grid"></div>
+
+<div class="wrapper">
+
+  <!-- Nav -->
+  <nav class="topnav">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      EcoTrack
+    </div>
+    <div class="nav-badge">Free · No Login</div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <i class="fas fa-leaf"></i>
+      Carbon Footprint Calculator
+    </div>
+    <h1>Know your impact.<br><em>Change your future.</em></h1>
+    <p class="hero-sub">Get a detailed breakdown of your annual CO₂ emissions and a personalised plan to reduce them.</p>
+    <div class="hero-stats">
+      <div class="stat-chip"><span class="num">4.8t</span><span class="lbl">World Avg CO₂</span></div>
+      <div class="stat-chip"><span class="num">16t</span><span class="lbl">US Average</span></div>
+      <div class="stat-chip"><span class="num">2t</span><span class="lbl">Paris 2050 Target</span></div>
+    </div>
+  </div>
+
+  <!-- Quick Bar -->
+  <div class="qbar">
+    <button class="qbtn" id="saveBtn"><i class="fas fa-bookmark"></i> Save</button>
+    <button class="qbtn" id="loadBtn"><i class="fas fa-folder-open"></i> Load</button>
+    <button class="qbtn" id="shareBtn"><i class="fas fa-share-nodes"></i> Share</button>
+    <button class="qbtn" id="tipsBtn"><i class="fas fa-lightbulb"></i> Eco Tip</button>
+    <button class="qbtn" id="resetAllBtn"><i class="fas fa-rotate"></i> Reset</button>
+  </div>
+
+  <!-- Step Track -->
+  <div class="step-track" id="stepTrack">
+    <div class="step-item active" data-step="0">
+      <div class="step-num">1</div>
+      <div class="step-label">Location</div>
+    </div>
+    <div class="step-connector" id="conn-0"></div>
+    <div class="step-item" data-step="1">
+      <div class="step-num">2</div>
+      <div class="step-label">Transport</div>
+    </div>
+    <div class="step-connector" id="conn-1"></div>
+    <div class="step-item" data-step="2">
+      <div class="step-num">3</div>
+      <div class="step-label">Home</div>
+    </div>
+    <div class="step-connector" id="conn-2"></div>
+    <div class="step-item" data-step="3">
+      <div class="step-num">4</div>
+      <div class="step-label">Diet</div>
+    </div>
+    <div class="step-connector" id="conn-3"></div>
+    <div class="step-item" data-step="4">
+      <div class="step-num">5</div>
+      <div class="step-label">Lifestyle</div>
+    </div>
+    <div class="step-connector" id="conn-4"></div>
+    <div class="step-item" data-step="5">
+      <div class="step-num">6</div>
+      <div class="step-label">Digital</div>
+    </div>
+  </div>
+
+  <!-- Calculator Card -->
+  <div class="card" id="calcCard">
+
+    <!-- ━━━ SECTION 1: LOCATION ━━━ -->
+    <div class="form-section active" id="sec-0">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-globe-americas"></i></div>
+        <div>
+          <h2>Location & Household</h2>
+          <p>Your location affects energy grid emissions and fuel factors</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Country / Region</label></div>
+          <select id="country">
+            <option value="US">🇺🇸 United States</option>
+            <option value="UK">🇬🇧 United Kingdom</option>
+            <option value="CA">🇨🇦 Canada</option>
+            <option value="AU">🇦🇺 Australia</option>
+            <option value="DE">🇩🇪 Germany</option>
+            <option value="FR">🇫🇷 France</option>
+            <option value="IN" selected>🇮🇳 India</option>
+            <option value="CN">🇨🇳 China</option>
+            <option value="BR">🇧🇷 Brazil</option>
+            <option value="JP">🇯🇵 Japan</option>
+            <option value="KR">🇰🇷 South Korea</option>
+            <option value="MX">🇲🇽 Mexico</option>
+            <option value="ZA">🇿🇦 South Africa</option>
+            <option value="NG">🇳🇬 Nigeria</option>
+            <option value="SE">🇸🇪 Sweden</option>
+            <option value="NO">🇳🇴 Norway</option>
+            <option value="NL">🇳🇱 Netherlands</option>
+            <option value="other">🌍 Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Area Type</label></div>
+          <select id="areaType">
+            <option value="urban">🏙️ Urban / City</option>
+            <option value="suburban">🏘️ Suburban</option>
+            <option value="rural">🌾 Rural</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <div class="field-label"><label>Household Size</label></div>
+          <select id="householdSize">
+            <option value="1">1 person</option>
+            <option value="2" selected>2 people</option>
+            <option value="3">3 people</option>
+            <option value="4">4 people</option>
+            <option value="5">5 people</option>
+            <option value="6">6+ people</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Home Type</label></div>
+          <select id="homeType">
+            <option value="apartment">🏢 Apartment</option>
+            <option value="house" selected>🏠 Detached House</option>
+            <option value="semi">🏡 Semi-detached</option>
+            <option value="townhouse">🏘️ Townhouse</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Home Size (m²)</label></div>
+          <input type="number" id="homeSize" min="20" max="600" value="100" placeholder="100">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Annual Income Level</label><span class="field-badge" id="incomeLabel">Middle</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="incomeLevel" min="1" max="5" value="3" class="slider">
+          <div class="slider-ticks"><span>Low</span><span>Lower-mid</span><span>Middle</span><span>Upper-mid</span><span>High</span></div>
+        </div>
+        <p class="field-hint">Higher income correlates with higher consumption emissions</p>
+      </div>
+    </div>
+
+    <!-- ━━━ SECTION 2: TRANSPORT ━━━ -->
+    <div class="form-section" id="sec-1">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-car"></i></div>
+        <div>
+          <h2>Transportation</h2>
+          <p>Cars and flights are often the biggest part of personal emissions</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Primary Vehicle</label></div>
+        <div class="toggle-group" id="carTypeGroup">
+          <div class="toggle-card selected" data-val="0.27"><span class="tc-icon">⛽</span><span class="tc-label">Petrol Car</span><span class="tc-sub">0.27 kg/km</span></div>
+          <div class="toggle-card" data-val="0.21"><span class="tc-icon">🛞</span><span class="tc-label">Diesel Car</span><span class="tc-sub">0.21 kg/km</span></div>
+          <div class="toggle-card" data-val="0.13"><span class="tc-icon">🔋</span><span class="tc-label">Hybrid</span><span class="tc-sub">0.13 kg/km</span></div>
+          <div class="toggle-card" data-val="0.07"><span class="tc-icon">⚡</span><span class="tc-label">Electric</span><span class="tc-sub">0.07 kg/km</span></div>
+          <div class="toggle-card" data-val="0.15"><span class="tc-icon">🏍️</span><span class="tc-label">Motorbike</span><span class="tc-sub">0.15 kg/km</span></div>
+          <div class="toggle-card" data-val="0"><span class="tc-icon">🚶</span><span class="tc-label">No Car</span><span class="tc-sub">0 kg/km</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Daily Driving Distance (km)</label><span class="field-badge" id="dailyKmVal">20 km</span></div>
+          <div class="slider-wrap">
+            <input type="range" id="dailyKm" min="0" max="200" value="20">
+            <div class="slider-ticks"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Public Transport Days / Week</label><span class="field-badge" id="ptVal">2 days</span></div>
+          <div class="slider-wrap">
+            <input type="range" id="publicTransport" min="0" max="7" value="2">
+            <div class="slider-ticks"><span>Never</span><span>2</span><span>4</span><span>6</span><span>Daily</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <div class="field-label"><label>Short-haul Flights / yr</label></div>
+          <input type="number" id="flights" min="0" max="50" value="2" placeholder="e.g. 2">
+          <p class="field-hint">Under 3 hrs</p>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Medium-haul Flights / yr</label></div>
+          <input type="number" id="medFlights" min="0" max="30" value="0" placeholder="e.g. 1">
+          <p class="field-hint">3–6 hrs</p>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Long-haul Flights / yr</label></div>
+          <input type="number" id="longFlights" min="0" max="20" value="0" placeholder="e.g. 1">
+          <p class="field-hint">Over 6 hrs</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Annual Train Travel (km)</label><span class="field-badge" id="trainVal">500 km</span></div>
+        <div class="slider-wrap">
+          <input type="range" id="trainKm" min="0" max="10000" value="500" step="100">
+          <div class="slider-ticks"><span>0</span><span>2500</span><span>5000</span><span>7500</span><span>10k</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Do you offset your flights?</label></div>
+        <select id="flightOffset">
+          <option value="1.0">No, I don't offset</option>
+          <option value="0.7">Occasionally offset</option>
+          <option value="0.4">Always offset flights</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ━━━ SECTION 3: HOME ENERGY ━━━ -->
+    <div class="form-section" id="sec-2">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-house-signal"></i></div>
+        <div>
+          <h2>Home Energy</h2>
+          <p>Heating and electricity dominate household emissions</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Monthly Electricity (kWh)</label><span class="field-badge" id="elecVal">300 kWh</span></div>
+          <div class="slider-wrap">
+            <input type="range" id="electricity" min="0" max="2000" value="300" step="10">
+            <div class="slider-ticks"><span>0</span><span>500</span><span>1000</span><span>1500</span><span>2000</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Green Electricity Tariff?</label></div>
+          <select id="greenElec">
+            <option value="1.0">No — standard grid</option>
+            <option value="0.5">Partial green tariff</option>
+            <option value="0.1">100% renewable tariff</option>
+            <option value="0.0">Solar / own generation</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Primary Heating Source</label></div>
+          <select id="heating">
+            <option value="2.0">🔥 Natural Gas</option>
+            <option value="2.7">🛢️ Heating Oil</option>
+            <option value="3.1">⛽ LPG / Propane</option>
+            <option value="0.5">⚡ Electric Heating</option>
+            <option value="0.15">♻️ Heat Pump</option>
+            <option value="0.8">🪵 Wood / Biomass</option>
+            <option value="0.05">☀️ Solar / Renewable</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Water Heating</label></div>
+          <select id="waterHeating">
+            <option value="0.5">Gas boiler</option>
+            <option value="0.3">Electric immersion</option>
+            <option value="0.05">Solar water heater</option>
+            <option value="0.08">Heat pump water heater</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Home Energy Efficiency</label></div>
+        <select id="energyEfficiency">
+          <option value="1.4">Poor — old, uninsulated building</option>
+          <option value="1.2">Below average</option>
+          <option value="1.0" selected>Average</option>
+          <option value="0.8">Good — insulated, double glazed</option>
+          <option value="0.6">Excellent — near-passive standard</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Home Improvements Made</label></div>
+        <div class="check-group">
+          <label class="check-item" id="chk-solar">
+            <input type="checkbox" id="hasSolar">
+            <span class="check-box">✓</span>
+            <span>
+              <span class="check-label">Solar panels installed</span>
+              <span class="check-sub">Rooftop PV system</span>
+            </span>
+            <span class="check-save">−0.8 t/yr</span>
+          </label>
+          <label class="check-item" id="chk-ev">
+            <input type="checkbox" id="hasEV">
+            <span class="check-box">✓</span>
+            <span>
+              <span class="check-label">Electric vehicle home charging</span>
+              <span class="check-sub">Home EV charger</span>
+            </span>
+            <span class="check-save">−0.3 t/yr</span>
+          </label>
+          <label class="check-item" id="chk-compost">
+            <input type="checkbox" id="hasCompost">
+            <span class="check-box">✓</span>
+            <span>
+              <span class="check-label">Home composting</span>
+              <span class="check-sub">Diverts organic waste from landfill</span>
+            </span>
+            <span class="check-save">−0.1 t/yr</span>
+          </label>
+          <label class="check-item" id="chk-smart">
+            <input type="checkbox" id="hasSmart">
+            <span class="check-box">✓</span>
+            <span>
+              <span class="check-label">Smart thermostat</span>
+              <span class="check-sub">Auto-adjusting heating/cooling</span>
+            </span>
+            <span class="check-save">−0.15 t/yr</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ━━━ SECTION 4: DIET ━━━ -->
+    <div class="form-section" id="sec-3">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-utensils"></i></div>
+        <div>
+          <h2>Diet & Food</h2>
+          <p>Food systems account for ~26% of global greenhouse gas emissions</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Diet Type</label></div>
+        <div class="toggle-group" id="dietGroup">
+          <div class="toggle-card" data-val="3.3"><span class="tc-icon">🥩</span><span class="tc-label">Heavy Meat</span><span class="tc-sub">Daily red meat</span></div>
+          <div class="toggle-card selected" data-val="2.5"><span class="tc-icon">🍗</span><span class="tc-label">Meat Eater</span><span class="tc-sub">Most meals</span></div>
+          <div class="toggle-card" data-val="1.9"><span class="tc-icon">🐟</span><span class="tc-label">Pescatarian</span><span class="tc-sub">Fish, no meat</span></div>
+          <div class="toggle-card" data-val="1.4"><span class="tc-icon">🥦</span><span class="tc-label">Vegetarian</span><span class="tc-sub">Dairy & eggs</span></div>
+          <div class="toggle-card" data-val="0.9"><span class="tc-icon">🌱</span><span class="tc-label">Vegan</span><span class="tc-sub">Plant-based only</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Locally Sourced Food</label></div>
+          <select id="localFood">
+            <option value="1.1">Rarely — mostly imported</option>
+            <option value="1.0" selected>Mixed — some local</option>
+            <option value="0.85">Mostly local / seasonal</option>
+            <option value="0.7">Almost entirely local</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Organic Food</label></div>
+          <select id="organicFood">
+            <option value="1.0" selected>Conventional</option>
+            <option value="0.95">Some organic</option>
+            <option value="0.88">Mostly organic</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Food Waste Level</label></div>
+        <select id="foodWaste">
+          <option value="1.3">High — throw away a lot</option>
+          <option value="1.1">Above average</option>
+          <option value="1.0" selected>Average household waste</option>
+          <option value="0.85">Below average</option>
+          <option value="0.65">Minimal — meal plan & compost</option>
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Bottled Water</label></div>
+          <select id="bottledWater">
+            <option value="0.05">Rarely buy bottled water</option>
+            <option value="0.15" selected>Occasionally</option>
+            <option value="0.3">Primary drinking source</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Eating Out Frequency</label></div>
+          <select id="eatingOut">
+            <option value="0.1">Rarely (< once/month)</option>
+            <option value="0.25" selected>Occasionally (1–2×/week)</option>
+            <option value="0.5">Often (3–5×/week)</option>
+            <option value="0.8">Most meals out</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ━━━ SECTION 5: LIFESTYLE ━━━ -->
+    <div class="form-section" id="sec-4">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-bag-shopping"></i></div>
+        <div>
+          <h2>Shopping & Lifestyle</h2>
+          <p>Consumption habits and how you spend money affect your footprint</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Clothing Purchases / Year</label></div>
+        <select id="clothingHabits">
+          <option value="0.2">Minimal — buy only when needed</option>
+          <option value="0.4">Low — a few items / season</option>
+          <option value="0.7" selected>Average</option>
+          <option value="1.2">Fashion-conscious — regular purchases</option>
+          <option value="1.8">High — frequent fast fashion</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Second-hand / Sustainable Brands</label></div>
+        <select id="sustainableShopping">
+          <option value="1.0" selected>Rarely shop sustainably</option>
+          <option value="0.8">Sometimes choose sustainable</option>
+          <option value="0.6">Mostly sustainable / second-hand</option>
+          <option value="0.4">Almost entirely second-hand / eco brands</option>
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Online Shopping Deliveries / Month</label><span class="field-badge" id="deliveriesVal">5/mo</span></div>
+          <div class="slider-wrap">
+            <input type="range" id="deliveries" min="0" max="30" value="5">
+            <div class="slider-ticks"><span>0</span><span>8</span><span>15</span><span>22</span><span>30</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Electronic Gadgets / Year</label></div>
+          <select id="electronics">
+            <option value="0.1">No new devices</option>
+            <option value="0.3" selected>1–2 devices</option>
+            <option value="0.6">3–5 devices</option>
+            <option value="1.0">Many devices — early adopter</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Holiday Travel Style</label></div>
+          <select id="holidayStyle">
+            <option value="0.3">Staycation / local holidays</option>
+            <option value="0.6" selected>Mix of local and abroad</option>
+            <option value="1.0">Regular international travel</option>
+            <option value="1.8">Frequent luxury travel</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Hobbies & Recreation</label></div>
+          <select id="hobbies">
+            <option value="0.2">Low-impact (reading, walking, yoga)</option>
+            <option value="0.5" selected>Mixed (gym, cycling, sports)</option>
+            <option value="0.9">Motorised hobbies (motorsport, boating)</option>
+            <option value="1.4">High-impact (flying, skiing, motorsport)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Pet Ownership</label></div>
+        <select id="pets">
+          <option value="0">No pets</option>
+          <option value="0.3" selected>Small pet (cat, small dog)</option>
+          <option value="0.7">Medium / large dog</option>
+          <option value="0.1">Multiple small pets</option>
+          <option value="1.1">Multiple large dogs</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ━━━ SECTION 6: DIGITAL ━━━ -->
+    <div class="form-section" id="sec-5">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-wifi"></i></div>
+        <div>
+          <h2>Digital & Finance</h2>
+          <p>Often overlooked — streaming, cloud computing, and investments matter</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <div class="field-label"><label>Daily Screen Time (hours)</label><span class="field-badge" id="screenVal">4 hrs</span></div>
+          <div class="slider-wrap">
+            <input type="range" id="screenTime" min="0" max="16" value="4">
+            <div class="slider-ticks"><span>0</span><span>4</span><span>8</span><span>12</span><span>16</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><label>Video Streaming Quality</label></div>
+          <select id="streamingQuality">
+            <option value="0.05">SD (480p)</option>
+            <option value="0.12" selected>HD (1080p)</option>
+            <option value="0.3">4K / 8K</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Cloud Storage & Services Used</label></div>
+        <select id="cloudUsage">
+          <option value="0.02">Minimal — local files only</option>
+          <option value="0.05" selected>Moderate — personal cloud backup</option>
+          <option value="0.12">Heavy — large cloud usage, many services</option>
+          <option value="0.2">Power user — multiple TB stored</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Work Situation</label></div>
+        <select id="workSituation">
+          <option value="0">Fully remote / work from home</option>
+          <option value="0.2">Hybrid — 2–3 days in office</option>
+          <option value="0.4" selected>Full-time office commuter</option>
+          <option value="0.6">Frequent business travel</option>
+          <option value="0.1">Student</option>
+          <option value="0">Retired / not working</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Financial Investments / Pension</label></div>
+        <select id="investments">
+          <option value="0">No investments or savings</option>
+          <option value="0.3">Standard pension / savings account</option>
+          <option value="0.8" selected>Diversified portfolio (stocks, bonds)</option>
+          <option value="1.5">Large portfolio with fossil fuel exposure</option>
+          <option value="0.1">ESG / Green fund only</option>
+        </select>
+        <p class="field-hint">Financed emissions from investments can exceed lifestyle emissions for many people</p>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><label>Charitable / Offset Activity</label></div>
+        <select id="offsetActivity">
+          <option value="0">No carbon offsets</option>
+          <option value="-0.5">Occasional small offsets</option>
+          <option value="-1.5">Annual verified carbon offset purchase</option>
+          <option value="-3.0">Regular high-quality offsets (Gold Standard)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-row">
+      <button type="button" class="btn btn-ghost" id="prevBtn" style="display:none; flex:0.5;">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <button type="button" class="btn btn-primary" id="nextBtn">
+        Next <i class="fas fa-arrow-right"></i>
+      </button>
+      <button type="button" class="btn btn-calc" id="calcBtn" style="display:none;">
+        <i class="fas fa-calculator"></i> Calculate My Footprint
+      </button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━ RESULTS ━━━━━━━━━━━━━━━━ -->
+  <div id="resultsCard">
+
+    <!-- Hero result -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="result-hero">
+        <div class="result-hero-label">Your Annual Carbon Footprint</div>
+        <div class="emission-display">
+          <span class="emission-big" id="totalEmissions">0.0</span>
+          <div class="emission-unit-block">
+            <span class="unit">tons CO₂e</span>
+            <span class="sub">per year</span>
+          </div>
+        </div>
+        <div id="verdictBadge" class="result-verdict verdict-ok">
+          <i class="fas fa-circle-info"></i>
+          <span id="verdictText">Calculating...</span>
+        </div>
+      </div>
+
+      <div style="padding: 32px 40px 40px;">
+        <!-- Score cards -->
+        <div class="result-scores">
+          <div class="score-card">
+            <div class="sc-val" id="ecoScoreVal" style="color: var(--green);">—</div>
+            <div class="sc-label">Eco Score</div>
+            <div class="sc-sub" id="ecoScoreSub">out of 100</div>
+          </div>
+          <div class="score-card">
+            <div class="sc-val" id="vsWorldVal" style="color: var(--amber);">—</div>
+            <div class="sc-label">vs World Avg</div>
+            <div class="sc-sub">4.8 t global average</div>
+          </div>
+          <div class="score-card">
+            <div class="sc-val" id="toTargetVal" style="color: var(--blue);">—</div>
+            <div class="sc-label">To Paris Target</div>
+            <div class="sc-sub">2.0 t by 2050</div>
+          </div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="section-title"><i class="fas fa-chart-bar"></i> Emission Breakdown</div>
+        <div class="breakdown-list" id="breakdownList"></div>
+
+        <!-- Comparisons -->
+        <div class="section-title"><i class="fas fa-scale-balanced"></i> How You Compare</div>
+        <div class="comparison-grid" id="comparisonGrid"></div>
+
+        <div class="divider"></div>
+
+        <!-- Recommendations -->
+        <div class="section-title"><i class="fas fa-lightbulb"></i> Personalised Action Plan</div>
+        <div class="rec-grid" id="recGrid"></div>
+
+        <div class="divider"></div>
+
+        <!-- Timeline -->
+        <div class="section-title"><i class="fas fa-chart-line"></i> Your Reduction Roadmap</div>
+        <div class="timeline" id="timelineEl"></div>
+
+        <div class="divider"></div>
+
+        <!-- Footer actions -->
+        <div class="result-actions">
+          <button class="btn btn-outline" id="restartBtn"><i class="fas fa-rotate-left"></i> Recalculate</button>
+          <button class="btn btn-ghost"   id="printBtn"><i class="fas fa-print"></i> Print / PDF</button>
+          <button class="btn btn-primary" id="shareResultBtn"><i class="fas fa-share-nodes"></i> Share Results</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Built with ❤️ for the planet · EcoTrack Pro &copy; 2025 ·
+    <a href="https://www.ipcc.ch/" target="_blank">Data sources: IPCC</a>
+  </div>
+
+  <!-- Contact -->
+  <div style="text-align:center; margin: 12px auto 40px; max-width:900px;">
+    <span style="font-size:0.78rem; color:var(--text3); font-family:var(--sans);">Rajat &nbsp;·&nbsp;</span>
+    <a href="https://www.linkedin.com/in/rajat-rakesh-43bb253b2/" target="_blank" rel="noopener noreferrer"
+      style="font-size:0.78rem; color:var(--text3); font-family:var(--sans); text-decoration:underline; cursor:pointer; transition:color 0.2s;"
+      onmouseover="this.style.color='var(--green)'"
+      onmouseout="this.style.color='var(--text3)'">Contact the Developer</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✓</span>
+  <span id="toastMsg">Saved</span>
+</div>
+
+<script>
+// ── Grid emission factors (kg CO₂/kWh) by country ──
+const GRID = { US:0.386, UK:0.233, CA:0.13, AU:0.56, DE:0.338, FR:0.058, IN:0.708, CN:0.555, BR:0.074, JP:0.474, KR:0.459, MX:0.458, ZA:0.928, NG:0.434, SE:0.013, NO:0.012, NL:0.28, other:0.45 };
+
+const SECTIONS = 6;
+let currentSection = 0;
+
+// ── Toggle card helper ──
+function setupToggleGroup(groupId) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.querySelectorAll('.toggle-card').forEach(card => {
+    card.addEventListener('click', () => {
+      group.querySelectorAll('.toggle-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+}
+
+// ── Checkbox helper ──
+function setupChecks() {
+  document.querySelectorAll('.check-item').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('checked');
+      const cb = item.querySelector('input[type="checkbox"]');
+      if (cb) cb.checked = !cb.checked;
+    });
+  });
+}
+
+// ── Slider sync ──
+function syncSlider(sliderId, badgeId, fmt) {
+  const s = document.getElementById(sliderId);
+  const b = document.getElementById(badgeId);
+  if (!s || !b) return;
+  const update = () => { b.textContent = fmt(s.value); };
+  s.addEventListener('input', update);
+  update();
+}
+
+function getToggleVal(groupId, fallback = 0) {
+  const sel = document.querySelector(`#${groupId} .toggle-card.selected`);
+  return sel ? parseFloat(sel.dataset.val) : fallback;
+}
+
+function v(id, fb = 0) {
+  const el = document.getElementById(id);
+  if (!el) return fb;
+  return parseFloat(el.value) || fb;
+}
+
+// ── Step tracking ──
+function updateSteps(idx) {
+  document.querySelectorAll('.step-item').forEach((item, i) => {
+    item.classList.remove('active', 'done');
+    if (i < idx) item.classList.add('done');
+    if (i === idx) item.classList.add('active');
+  });
+  for (let i = 0; i < SECTIONS - 1; i++) {
+    const conn = document.getElementById(`conn-${i}`);
+    if (conn) conn.classList.toggle('done', i < idx);
+  }
+}
+
+function showSection(idx) {
+  document.querySelectorAll('.form-section').forEach((s, i) => {
+    s.classList.toggle('active', i === idx);
+  });
+  document.getElementById('prevBtn').style.display = idx === 0 ? 'none' : 'flex';
+  document.getElementById('nextBtn').style.display = idx === SECTIONS - 1 ? 'none' : 'flex';
+  document.getElementById('calcBtn').style.display = idx === SECTIONS - 1 ? 'flex' : 'none';
+  updateSteps(idx);
+}
+
+// ── Calculate ──
+function calculate() {
+  const country       = document.getElementById('country').value;
+  const gridFactor    = GRID[country] || 0.45;   // kg CO₂/kWh
+
+  const householdSize = Math.max(1, v('householdSize', 2));
+  const homeSize      = v('homeSize', 100);
+  const incomeLevel   = v('incomeLevel', 3);      // 1–5
+
+  // Transport
+  const carFactor     = getToggleVal('carTypeGroup', 0.27);
+  const dailyKm       = v('dailyKm', 20);
+  const ptDays        = v('publicTransport', 2);
+  const flights       = v('flights', 2);
+  const medFlights    = v('medFlights', 0);
+  const longFlights   = v('longFlights', 0);
+  const trainKm       = v('trainKm', 500);
+  const flightOffset  = v('flightOffset', 1.0);
+
+  const tCar     = carFactor * dailyKm * 365 / 1000;
+  const tPT      = ptDays * 52 * 0.004;           // ~4 kg CO₂/trip
+  const tFlight  = (flights * 0.18 + medFlights * 0.5 + longFlights * 0.95) * flightOffset;
+  const tTrain   = trainKm * 0.000041;            // 41g CO₂/km average rail
+  const tTransport = Math.max(0, tCar - ptDays * 0.015) + tPT + tFlight + tTrain;
+
+  // Home
+  const electricity  = v('electricity', 300);
+  const greenFactor  = v('greenElec', 1.0);
+  const heating      = v('heating', 2.0);
+  const waterHeat    = v('waterHeating', 0.5);
+  const efficiency   = v('energyEfficiency', 1.0);
+  const hasSolar     = document.getElementById('chk-solar').classList.contains('checked') ? -0.8 : 0;
+  const hasEV        = document.getElementById('chk-ev').classList.contains('checked')    ? -0.3 : 0;
+  const hasCompost   = document.getElementById('chk-compost').classList.contains('checked')? -0.1 : 0;
+  const hasSmart     = document.getElementById('chk-smart').classList.contains('checked') ? -0.15: 0;
+
+  const tElec    = electricity * 12 * gridFactor * greenFactor * efficiency / 1000;
+  const tHeat    = heating * homeSize * 0.009 * efficiency / householdSize;
+  const tWater   = waterHeat * 0.4;
+  const tHome    = Math.max(0, tElec + tHeat + tWater + hasSolar + hasEV + hasCompost + hasSmart);
+
+  // Diet
+  const dietFactor  = getToggleVal('dietGroup', 2.5);
+  const foodWaste   = v('foodWaste', 1.0);
+  const localFood   = v('localFood', 1.0);
+  const organic     = v('organicFood', 1.0);
+  const bottled     = v('bottledWater', 0.15);
+  const eatingOut   = v('eatingOut', 0.25);
+
+  const tFood = (dietFactor * 365 * foodWaste * localFood * organic / 1000) + bottled + eatingOut;
+
+  // Lifestyle
+  const clothing   = v('clothingHabits', 0.7);
+  const sustShop   = v('sustainableShopping', 1.0);
+  const deliveries = v('deliveries', 5);
+  const electronics= v('electronics', 0.3);
+  const holiday    = v('holidayStyle', 0.6);
+  const hobbies    = v('hobbies', 0.5);
+  const pets       = v('pets', 0.3);
+  const incomeAdj  = 0.8 + incomeLevel * 0.15; // income multiplier 0.95–1.55
+
+  const tLifestyle = (clothing * sustShop + deliveries * 0.015 + electronics + holiday + hobbies + pets) * incomeAdj;
+
+  // Digital
+  const screenTime  = v('screenTime', 4);
+  const streamQ     = v('streamingQuality', 0.12);
+  const cloud       = v('cloudUsage', 0.05);
+  const workSit     = v('workSituation', 0.4);
+  const investments = v('investments', 0.8);
+  const offsetAct   = v('offsetActivity', 0);
+
+  const tDigital = screenTime * streamQ * 365 / 1000 + cloud + workSit + investments / 10 + offsetAct;
+
+  const total = tTransport + tHome + tFood + tLifestyle + tDigital;
+
+  return {
+    transport: Math.max(0, tTransport),
+    home:      Math.max(0, tHome),
+    food:      Math.max(0, tFood),
+    lifestyle: Math.max(0, tLifestyle),
+    digital:   Math.max(0, tDigital),
+    total:     Math.max(0, total),
+    country,
+    gridFactor
+  };
+}
+
+// ── Animate number ──
+function animateNum(id, from, to, dur = 1500, decimals = 1) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = (from + (to - from) * ease).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function animateBar(el, target) {
+  el.style.width = '0%';
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      el.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
+      el.style.width = Math.min(target, 100) + '%';
+    }, 80);
+  });
+}
+
+// ── Show Results ──
+function showResults(r) {
+  document.getElementById('calcCard').style.display = 'none';
+  document.getElementById('resultsCard').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  animateNum('totalEmissions', 0, r.total, 1800);
+
+  // Verdict
+  const vBadge = document.getElementById('verdictBadge');
+  const vText  = document.getElementById('verdictText');
+  vBadge.className = 'result-verdict';
+  if (r.total < 3)       { vBadge.classList.add('verdict-good'); vText.textContent = '🌱 Exceptional — well below global average'; }
+  else if (r.total < 6)  { vBadge.classList.add('verdict-good'); vText.textContent = '✅ Good — below world average of 4.8t'; }
+  else if (r.total < 10) { vBadge.classList.add('verdict-ok');   vText.textContent = '⚠️ Average — room for meaningful improvement'; }
+  else if (r.total < 15) { vBadge.classList.add('verdict-high'); vText.textContent = '🔶 Above average — consider key reductions'; }
+  else                   { vBadge.classList.add('verdict-high'); vText.textContent = '🔴 High footprint — significant changes needed'; }
+
+  // Eco score
+  const score = Math.max(5, Math.round(100 - r.total * 5));
+  const clampedScore = Math.min(score, 98);
+  setTimeout(() => animateNum('ecoScoreVal', 0, clampedScore, 1200, 0), 300);
+  document.getElementById('ecoScoreVal').style.color = clampedScore >= 60 ? 'var(--green)' : clampedScore >= 35 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('ecoScoreSub').textContent = clampedScore >= 75 ? 'Excellent' : clampedScore >= 50 ? 'Good' : clampedScore >= 30 ? 'Fair' : 'Needs work';
+
+  // vs World
+  const vsWorld = ((r.total / 4.8 - 1) * 100).toFixed(0);
+  document.getElementById('vsWorldVal').textContent = (vsWorld > 0 ? '+' : '') + vsWorld + '%';
+  document.getElementById('vsWorldVal').style.color = vsWorld <= 0 ? 'var(--green)' : vsWorld < 50 ? 'var(--amber)' : 'var(--red)';
+
+  // To target
+  const toTarget = (r.total - 2.0).toFixed(1);
+  document.getElementById('toTargetVal').textContent = toTarget > 0 ? '+' + toTarget + 't' : '✓';
+  document.getElementById('toTargetVal').style.color = toTarget <= 0 ? 'var(--green)' : 'var(--blue)';
+
+  // Breakdown
+  const categories = [
+    { key: 'transport', label: 'Transport',  sub: 'Cars, flights, trains',   icon: 'fas fa-car',           color: '#FF6B6B' },
+    { key: 'home',      label: 'Home Energy',sub: 'Electricity & heating',   icon: 'fas fa-house-signal',  color: '#4ECDC4' },
+    { key: 'food',      label: 'Food & Diet',sub: 'Diet, waste, eating out', icon: 'fas fa-utensils',      color: '#96C93D' },
+    { key: 'lifestyle', label: 'Lifestyle',  sub: 'Shopping, travel, pets',  icon: 'fas fa-bag-shopping',  color: '#A58BFF' },
+    { key: 'digital',   label: 'Digital',    sub: 'Devices, finance, cloud', icon: 'fas fa-wifi',          color: '#4a9ef5' },
+  ];
+  const bkList = document.getElementById('breakdownList');
+  bkList.innerHTML = '';
+  categories.forEach(cat => {
+    const val = r[cat.key] || 0;
+    const pct = r.total > 0 ? (val / r.total) * 100 : 0;
+    const row = document.createElement('div');
+    row.className = 'bk-item';
+    row.innerHTML = `
+      <div class="bk-icon"><i class="${cat.icon}"></i></div>
+      <div><div class="bk-name">${cat.label}</div><div class="bk-sub">${cat.sub}</div></div>
+      <div class="bk-bar-wrap"><div class="bk-bar" style="background:${cat.color}" id="bar-${cat.key}"></div></div>
+      <div class="bk-pct">${pct.toFixed(0)}%</div>
+      <div class="bk-tons">${val.toFixed(2)} t</div>
+    `;
+    bkList.appendChild(row);
+    setTimeout(() => animateBar(document.getElementById(`bar-${cat.key}`), pct), 200);
+  });
+
+  // Comparisons
+  const countryAvg = { US:16, UK:5.5, CA:14, AU:15, DE:8.9, FR:4.5, IN:1.9, CN:7.4, BR:2.3, JP:8.6, KR:11.8, MX:3.7, ZA:8.5, NG:0.7, SE:3.8, NO:7.1, NL:7.9, other:4.8 };
+  const natAvg = countryAvg[r.country] || 4.8;
+  const comparisons = [
+    { icon: '🌍', label: 'World Average',   val: 4.8 },
+    { icon: '🏳️', label: 'Your Country Avg',val: natAvg },
+    { icon: '🎯', label: 'Paris 2050 Target',val: 2.0 },
+    { icon: '🏆', label: 'Best in class',    val: 1.2 },
+  ];
+  const cGrid = document.getElementById('comparisonGrid');
+  cGrid.innerHTML = '';
+  comparisons.forEach(c => {
+    const diff = r.total - c.val;
+    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + 't';
+    const cls = diff <= 0 ? 'diff-minus' : 'diff-plus';
+    const card = document.createElement('div');
+    card.className = 'cmp-card';
+    card.innerHTML = `
+      <div class="cmp-icon">${c.icon}</div>
+      <div>
+        <div class="cmp-val">${c.val} t</div>
+        <div class="cmp-lbl">${c.label}</div>
+      </div>
+      <div class="cmp-diff ${cls}">${diffStr}</div>
+    `;
+    cGrid.appendChild(card);
+  });
+
+  // Recommendations
+  const recs = [];
+  if (r.transport > 2) recs.push({ icon:'🚗', title:'Switch to EVs or Cycling', desc:'Replace short car trips with cycling or e-bikes. Consider an EV for your next vehicle.', save: (r.transport * 0.25).toFixed(1)+' t/yr', diff:'med' });
+  if (r.transport > 1) recs.push({ icon:'✈️', title:'Reduce Flight Frequency', desc:'Replacing one long-haul return flight with video calls or train travel makes a major difference.', save: (r.total * 0.08).toFixed(1)+' t/yr', diff:'hard' });
+  if (r.home > 1.5)    recs.push({ icon:'☀️', title:'Install Solar Panels', desc:'Rooftop PV can eliminate a large portion of your grid electricity emissions.', save:'0.8 t/yr', diff:'hard' });
+  if (r.home > 1)      recs.push({ icon:'🌡️', title:'Smart Heating Control', desc:'A smart thermostat and lowering heat by 1–2°C can cut heating emissions by 10–15%.', save: (r.home * 0.12).toFixed(1)+' t/yr', diff:'easy' });
+  if (r.food > 1.5)    recs.push({ icon:'🥦', title:'Reduce Meat Consumption', desc:'Switching to 2 meat-free days per week has one of the highest impact-to-effort ratios.', save: (r.food * 0.18).toFixed(1)+' t/yr', diff:'easy' });
+  if (r.food > 1)      recs.push({ icon:'🛒', title:'Buy Local & Seasonal Food', desc:'Local, seasonal produce cuts transport emissions and supports regional farmers.', save: (r.food * 0.08).toFixed(1)+' t/yr', diff:'easy' });
+  if (r.lifestyle > 1) recs.push({ icon:'👕', title:'Embrace Second-hand', desc:'Buying second-hand clothing cuts fashion emissions by up to 70% per item.', save: (r.lifestyle * 0.15).toFixed(1)+' t/yr', diff:'easy' });
+  if (r.digital > 0.5) recs.push({ icon:'💰', title:'Divest from Fossil Fuels', desc:'Moving pensions and savings into ESG funds can eliminate significant financed emissions.', save:'0.5–2 t/yr', diff:'med' });
+  recs.push({ icon:'🌳', title:'Verified Carbon Offsets', desc:'After reducing emissions, offset the remainder with Gold Standard certified projects.', save:'Neutralise remaining footprint', diff:'easy' });
+  recs.push({ icon:'🔌', title:'Unplug Standby Devices', desc:'Standby electronics account for 5–10% of home electricity. Plug strips make it easy.', save:'0.1 t/yr', diff:'easy' });
+
+  const recGrid = document.getElementById('recGrid');
+  recGrid.innerHTML = '';
+  recs.slice(0, 6).forEach(rec => {
+    const card = document.createElement('div');
+    card.className = 'rec-card';
+    const diffLabel = rec.diff === 'easy' ? 'Easy' : rec.diff === 'med' ? 'Medium' : 'Challenge';
+    const diffCls   = rec.diff === 'easy' ? 'diff-easy' : rec.diff === 'med' ? 'diff-med' : 'diff-hard';
+    card.innerHTML = `
+      <span class="rec-difficulty ${diffCls}">${diffLabel}</span>
+      <div class="rec-icon">${rec.icon}</div>
+      <div class="rec-title">${rec.title}</div>
+      <div class="rec-desc">${rec.desc}</div>
+      <span class="rec-save">Saves ~${rec.save}</span>
+    `;
+    recGrid.appendChild(card);
+  });
+
+  // Timeline
+  const save1m = (r.total * 0.05).toFixed(1);
+  const save6m = (r.total * 0.18).toFixed(1);
+  const save1y = (r.total * 0.35).toFixed(1);
+  const save3y = (r.total * 0.60).toFixed(1);
+  const tlItems = [
+    { time:'This Week', title:'Quick Wins', desc:'Unplug standby devices, reduce heating by 1°C, swap one car trip for walking.', save: save1m },
+    { time:'1–3 Months', title:'Habit Formation', desc:'Introduce 2 meat-free days/week, switch to a green energy tariff, sign up for public transport.', save: (r.total * 0.10).toFixed(1) },
+    { time:'6 Months', title:'Lifestyle Shift', desc:'Optimise your commute, upgrade home insulation, reduce flight frequency.', save: save6m },
+    { time:'1 Year', title:'Structural Changes', desc:'Consider an EV or e-bike, install solar panels, shift investments to ESG funds.', save: save1y },
+    { time:'3 Years', title:'Low-Carbon Living', desc:'Achieve a near-sustainable footprint through sustained changes and renewable infrastructure.', save: save3y },
+  ];
+  const tlEl = document.getElementById('timelineEl');
+  tlEl.innerHTML = '';
+  tlItems.forEach(tl => {
+    const div = document.createElement('div');
+    div.className = 'tl-item';
+    div.innerHTML = `
+      <div class="tl-time">${tl.time}</div>
+      <div class="tl-title">${tl.title}</div>
+      <div class="tl-desc">${tl.desc}</div>
+      <span class="tl-save-badge">Save ~${tl.save} t/yr</span>
+    `;
+    tlEl.appendChild(div);
+  });
+}
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const i = document.getElementById('toastIcon');
+  const m = document.getElementById('toastMsg');
+  i.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  m.textContent = msg;
+  t.style.borderColor = type === 'success' ? 'var(--green-dim)' : type === 'error' ? 'rgba(224,82,82,0.4)' : 'var(--border2)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Collect / restore form state ──
+function collectState() {
+  return {
+    country: v('country'), areaType: v('areaType'), householdSize: v('householdSize'),
+    homeType: v('homeType'), homeSize: v('homeSize'), incomeLevel: v('incomeLevel'),
+    carType: getToggleVal('carTypeGroup', 0.27), dailyKm: v('dailyKm'), publicTransport: v('publicTransport'),
+    flights: v('flights'), medFlights: v('medFlights'), longFlights: v('longFlights'),
+    trainKm: v('trainKm'), flightOffset: v('flightOffset'),
+    electricity: v('electricity'), greenElec: v('greenElec'), heating: v('heating'),
+    waterHeating: v('waterHeating'), energyEfficiency: v('energyEfficiency'),
+    dietType: getToggleVal('dietGroup', 2.5), localFood: v('localFood'), organicFood: v('organicFood'),
+    foodWaste: v('foodWaste'), bottledWater: v('bottledWater'), eatingOut: v('eatingOut'),
+    clothingHabits: v('clothingHabits'), sustainableShopping: v('sustainableShopping'),
+    deliveries: v('deliveries'), electronics: v('electronics'), holidayStyle: v('holidayStyle'),
+    hobbies: v('hobbies'), pets: v('pets'),
+    screenTime: v('screenTime'), streamingQuality: v('streamingQuality'), cloudUsage: v('cloudUsage'),
+    workSituation: v('workSituation'), investments: v('investments'), offsetActivity: v('offsetActivity'),
+  };
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  // Toggle groups
+  setupToggleGroup('carTypeGroup');
+  setupToggleGroup('dietGroup');
+  setupChecks();
+
+  // Sliders
+  syncSlider('dailyKm', 'dailyKmVal', v => `${v} km`);
+  syncSlider('publicTransport', 'ptVal', v => v == 0 ? 'Never' : `${v} day${v > 1 ? 's' : ''}`);
+  syncSlider('trainKm', 'trainVal', v => `${v} km`);
+  syncSlider('electricity', 'elecVal', v => `${v} kWh`);
+  syncSlider('deliveries', 'deliveriesVal', v => `${v}/mo`);
+  syncSlider('screenTime', 'screenVal', v => `${v} hrs`);
+  syncSlider('incomeLevel', 'incomeLabel', v => ['Low','Lower-mid','Middle','Upper-mid','High'][v-1] || 'Middle');
+
+  // Navigation
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (currentSection < SECTIONS - 1) { currentSection++; showSection(currentSection); }
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentSection > 0) { currentSection--; showSection(currentSection); }
+  });
+  document.getElementById('calcBtn').addEventListener('click', () => {
+    toast('Calculating your footprint…', 'info');
+    setTimeout(() => {
+      const results = calculate();
+      showResults(results);
+    }, 600);
+  });
+
+  // Step clicks
+  document.querySelectorAll('.step-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.step);
+      currentSection = idx;
+      showSection(idx);
+    });
+  });
+
+  // Result buttons
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    document.getElementById('resultsCard').style.display = 'none';
+    document.getElementById('calcCard').style.display = 'block';
+    currentSection = 0;
+    showSection(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast('Ready for a new calculation!', 'success');
+  });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  document.getElementById('shareResultBtn').addEventListener('click', () => {
+    const total = document.getElementById('totalEmissions').textContent;
+    const text = `My annual carbon footprint is ${total} tons CO₂e — calculated with EcoTrack Pro 🌍`;
+    if (navigator.share) {
+      navigator.share({ title: 'My EcoTrack Result', text });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      toast('Result copied to clipboard!', 'success');
+    }
+  });
+
+  // Quick bar
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    localStorage.setItem('ecotrack_state', JSON.stringify(collectState()));
+    toast('Progress saved!', 'success');
+  });
+  document.getElementById('loadBtn').addEventListener('click', () => {
+    const s = localStorage.getItem('ecotrack_state');
+    if (!s) { toast('No saved data found', 'info'); return; }
+    try {
+      const d = JSON.parse(s);
+      Object.entries(d).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && el.tagName === 'SELECT') el.value = val;
+        if (el && el.tagName === 'INPUT')  el.value = val;
+      });
+      // re-sync badges
+      ['dailyKm','publicTransport','trainKm','electricity','deliveries','screenTime','incomeLevel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
+      });
+      toast('Data loaded!', 'success');
+    } catch(e) { toast('Error loading data', 'error'); }
+  });
+  document.getElementById('shareBtn').addEventListener('click', () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast('Link copied to clipboard!', 'success');
+    } else {
+      toast('Copy the URL to share', 'info');
+    }
+  });
+  document.getElementById('resetAllBtn').addEventListener('click', () => {
+    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    document.querySelectorAll('input[type="number"]').forEach(i => { i.value = i.defaultValue || 0; });
+    document.querySelectorAll('input[type="range"]').forEach(i => { i.value = i.defaultValue || 0; i.dispatchEvent(new Event('input')); });
+    document.querySelectorAll('.toggle-card').forEach((c, i) => {
+      const group = c.closest('.toggle-group');
+      if (group) { group.querySelectorAll('.toggle-card').forEach(x => x.classList.remove('selected')); group.querySelector('.toggle-card')?.classList.add('selected'); }
+    });
+    document.querySelectorAll('.check-item').forEach(c => {
+      c.classList.remove('checked');
+      const cb = c.querySelector('input[type="checkbox"]');
+      if (cb) cb.checked = false;
+    });
+    toast('Form reset', 'info');
+  });
+  document.getElementById('tipsBtn').addEventListener('click', () => {
+    const tips = [
+      '🚲 Cycling 3 days/week instead of driving saves ~0.7 t CO₂/yr',
+      '🥗 One meat-free day per week saves ~0.35 t CO₂/yr',
+      '💡 Switching to LED bulbs uses 75% less electricity',
+      '✈️ One fewer long-haul return flight saves ~1.9 t CO₂',
+      '🌡️ Lowering your thermostat by 2°C cuts heating bills by ~10%',
+      '🛍️ Buying second-hand clothes cuts fashion emissions by 70%',
+      '☀️ Solar panels can eliminate 0.7–1.5 t CO₂ from your home energy',
+      '🚿 Cutting shower time by 2 minutes saves ~0.07 t CO₂/yr',
+      '💰 Switching your pension to an ESG fund can reduce financed emissions by 60%',
+      '🌱 Composting food waste prevents methane from landfill',
+    ];
+    toast(tips[Math.floor(Math.random() * tips.length)], 'info');
+  });
+
+  // Initial state
+  showSection(0);
+});
+</script>
+</body>
+</html>
