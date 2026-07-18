@@ -131,4 +131,4 @@ Issues and PRs are welcome. Since this is currently a single-file project, pleas
 
 ## License
 
-No license file is currently present in the repository — add one (MIT recommended for an open personal project) if you intend for others to reuse the code.
+Licensed under the [MIT License](LICENSE). You're free to use, modify, and distribute this code, provided the original copyright notice is retained.
